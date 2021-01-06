@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Dish;
 use Illuminate\Http\Request;
 
 class OrdersController extends Controller
@@ -10,6 +11,7 @@ class OrdersController extends Controller
         $this->middleware('auth');
     }
     public function index(){
-        return view('kitchen.order');
+        $dishes = Dish::all();
+        return view('kitchen.order',compact('dishes'));
     }
 }

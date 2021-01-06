@@ -25,8 +25,8 @@ class LoginController extends Controller
      * Where to redirect users after login.
      *
      * @var string
-     */
-    protected $redirectTo = RouteServiceProvider::HOME;
+     */                     // state the directory after login
+    protected $redirectTo = 'dishes';
 
     /**
      * Create a new controller instance.

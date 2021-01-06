@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Dish;
+use App\Models\Category;
 use Illuminate\Http\Request;
+use App\Http\Requests\DishCreatedRequest;
 
 class DishesController extends Controller
 {
@@ -15,6 +17,8 @@ class DishesController extends Controller
     public function index()
     {
         $dishes = Dish::all();
+        // $dish = Dish::find(1);
+        // dd($dish->category);
         return view('kitchen.dish',compact('dishes'));
     }
 
@@ -25,7 +29,8 @@ class DishesController extends Controller
      */
     public function create()
     {
-        //
+        $categories = Category::all();
+        return view('kitchen.DishCreate',compact('categories'));
     }
 
     /**
@@ -34,9 +39,19 @@ class DishesController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(DishCreatedRequest $request) //replace Request with DishCreateRequest(Request created for create)
     {
-        //
+        $dish = new Dish(); // ma thu tr tway myr tl..request name nae column name so yin new Model() ko tone pyy .
+        $dish->name = $request->name;
+        $dish->category_id = $request->category;
+
+        $imageName = date('YmdHis'). "." . request()->dish_image->getClientOriginalExtension(); #date.jpg or date.png extensions
+        request()->dish_image->move(public_path('images'),$imageName);  // moving the image from user request to public\images
+
+        $dish->image = $imageName;
+        $dish->save();  // must be saved..but Dish::create() nae tone khe tl so save ma lo. Model::create() ka blog project mr tone pee trr
+        // saving the new Dish
+        return redirect('dishes')->with('message','Dish created successfully!');  // flash message.
     }
 
     /**
@@ -47,7 +62,6 @@ class DishesController extends Controller
      */
     public function show($id)
     {
-        //
     }
 
     /**
@@ -56,11 +70,11 @@ class DishesController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function edit($id)
-    {
-        //
+    public function edit(Dish $dish) // Route model binding $dish nae route:list htl ka {dish} nae thu ya
+    {   
+        $categories = Category::all();
+        return view('kitchen.DishEdit',compact('dish','categories'));
     }
-
     /**
      * Update the specified resource in storage.
      *
@@ -68,9 +82,22 @@ class DishesController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, Dish $dish)
     {
-        //
+        request()->validate([       // we are validating here because we dun want to use rukes in the DishCreatedRequest
+            'name' => 'required',   // we want to give image as optional but not required.
+            'category' => 'required'
+        ]);
+        $dish->name = $request->name;
+        $dish->category_id = $request->category;
+
+        if($request->dish_image){
+            $imageName = date('YmdHis'). "." . request()->dish_image->getClientOriginalExtension(); #date.jpg or date.png extensions
+            request()->dish_image->move(public_path('images'),$imageName);  // moving the image from user request to public\images
+            $dish->image = $imageName;    
+        }
+        $dish->save();      // saving the existing Dish
+        return redirect('dishes')->with('message','Dish updated successfully!');
     }
 
     /**
@@ -79,8 +106,9 @@ class DishesController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy(Dish $dish)
     {
-        //
+        $dish->delete();
+        return redirect('dishes')->with('message','Dish deleted successfully!');
     }
 }
